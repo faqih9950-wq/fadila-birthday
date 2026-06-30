@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Happy Birthday!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2d0a0a, #4a1020, #3d0f1a);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
+        }
+
+        /* ===== INTRO PINTU BUNGA ===== */
+        #flower-intro {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .door-left, .door-right {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            transition: transform 1.8s cubic-bezier(0.77, 0, 0.18, 1);
+        }
+
+        .door-left { left: 0; }
+        .door-right { right: 0; }
+
+        .door-left.open { transform: translateX(-100%); }
+        .door-right.open { transform: translateX(100%); }
+
+        /* Canvas bunga di tiap pintu */
+        .door-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Teks intro */
+        #intro-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1001;
+            text-align: center;
+            pointer-events: none;
+            animation: fadeIn 1s ease;
+        }
+
+        #intro-text h2 {
+            font-size: 1.6rem;
+            color: #fff;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(255,200,200,0.8);
+            margin-bottom: 8px;
+        }
+
+        #intro-text p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 3px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* ===== AMPLOP ===== */
+        #envelope-page {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100%;
+            animation: fadeIn 1.5s ease;
+        }
+
+        #envelope-page.show { display: flex; }
+
+        .title-text {
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 4px;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+
+        .envelope-wrap {
+            cursor: pointer;
+            width: 280px;
+            height: 200px;
+            transition: transform 0.3s;
+        }
+
+        .envelope-wrap:hover { transform: scale(1.05); }
+
+        .envelope {
+            width: 280px;
+            height: 200px;
+            background: #c8a97e;
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .envelope::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 140px solid transparent;
+            border-right: 140px solid transparent;
+            border-top: 100px solid #b8956a;
+            z-index: 2;
+        }
+
+        .envelope::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 140px solid #a07850;
+            border-right: 140px solid #a07850;
+            border-top: 100px solid transparent;
+        }
+
+        .envelope-left {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0; height: 0;
+            border-left: 140px solid #b8916a;
+            border-top: 100px solid transparent;
+            border-bottom: 100px solid transparent;
+        }
+
+        .envelope-right {
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 0; height: 0;
+            border-right: 140px solid #b8916a;
+            border-top: 100px solid transparent;
+            border-bottom: 100px solid transparent;
+        }
+
+        .wax-seal {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 40% 35%, #c0392b, #7b0000);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .tap-text {
+            margin-top: 30px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            animation: pulse 2s infinite;
+        }
+
+        .envelope-wrap.opening {
+            animation: openEnvelope 1s ease forwards;
+        }
+
+        @keyframes openEnvelope {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
+            100% { transform: scale(0) rotate(10deg); opacity: 0; }
+        }
+
+        /* ===== KOLASE ===== */
+        #collage-page {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow-y: auto;
+            animation: fadeIn 1s ease;
+        }
+
+        #collage-page.show { display: block; }
+
+        .collage-inner {
+            min-height: 100vh;
+            padding: 60px 20px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .birthday-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .birthday-title h1 {
+            font-size: 2rem;
+            color: #e8a0a0;
+            text-shadow: 0 0 20px rgba(232,160,160,0.5);
+            margin-bottom: 5px;
+        }
+
+        .birthday-title .name {
+            font-size: 2.5rem;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .polaroid-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 700px;
+        }
+
+        .polaroid {
+            background: #fff;
+            padding: 10px 10px 40px 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            width: 170px;
+        }
+
+        .polaroid:nth-child(1) { transform: rotate(-4deg); }
+        .polaroid:nth-child(2) { transform: rotate(3deg); }
+        .polaroid:nth-child(3) { transform: rotate(-2deg); }
+        .polaroid:nth-child(4) { transform: rotate(5deg); }
+        .polaroid:nth-child(5) { transform: rotate(-3deg); }
+        .polaroid:nth-child(6) { transform: rotate(2deg); }
+
+        .polaroid img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .polaroid .caption {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #333;
+            margin-top: 8px;
+        }
+
+        .deco {
+            position: fixed;
+            font-size: 2.5rem;
+            pointer-events: none;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .deco-1 { top: 5%; left: 5%; }
+        .deco-2 { top: 10%; right: 8%; animation-delay: 0.5s; }
+        .deco-3 { bottom: 15%; left: 8%; animation-delay: 1s; }
+        .deco-4 { bottom: 10%; right: 5%; animation-delay: 1.5s; }
+        .deco-5 { top: 40%; left: 2%; animation-delay: 0.8s; }
+        .deco-6 { top: 50%; right: 2%; animation-delay: 1.2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .pesan {
+            margin-top: 30px;
+            text-align: center;
+            color: rgba(255,255,255,0.75);
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .btn-close {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(180,60,60,0.7);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 100;
+        }
+
+        .btn-close:hover { background: rgba(180,60,60,1); }
+
+        canvas#hearts {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="hearts"></canvas>
+
+<!-- DEKORASI KOLASE -->
+<div class="deco deco-1">🌸</div>
+<div class="deco deco-2">🦋</div>
+<div class="deco deco-3">🌹</div>
+<div class="deco deco-4">🌷</div>
+<div class="deco deco-5">✨</div>
+<div class="deco deco-6">🌺</div>
+
+<!-- INTRO PINTU BUNGA -->
+<div id="flower-intro">
+    <div class="door-left">
+        <canvas class="door-canvas" id="canvas-left"></canvas>
+    </div>
+    <div class="door-right">
+        <canvas class="door-canvas" id="canvas-right"></canvas>
+    </div>
+</div>
+
+<div id="intro-text">
+    <h2>✨ Special for You ✨</h2>
+</div>
+
+<!-- AMPLOP -->
+<div id="envelope-page">
+    <div class="title-text">for you ✉️</div>
+    <div class="envelope-wrap" onclick="openEnvelope()">
+        <div class="envelope">
+            <div class="envelope-left"></div>
+            <div class="envelope-right"></div>
+            <div class="wax-seal">🌹</div>
+        </div>
+    </div>
+    <div class="tap-text">tap to open</div>
+</div>
+
+<!-- KOLASE -->
+<div id="collage-page">
+    <div class="collage-inner">
+        <div class="birthday-title">
+            <h1>🎂 Happy Birthday!</h1>
+            <div class="name">Fadila Nada Aulia</div>
+        </div>
+
+        <div class="polaroid-grid">
+            <div class="polaroid">
+                <img src="static/foto1.JPG" alt="Foto1">
+                <div class="caption">caption 1 ✨</div>
+            </div>
+            <div class="polaroid">
+                <img src="static/foto2.jpg" alt="Foto2">
+                <div class="caption">caption 2 🌸</div>
+            </div>
+            <div class="polaroid">
+                <img src="static/foto3.JPG" alt="Foto3">
+                <div class="caption">caption 3 🌹</div>
+            </div>
+            <div class="polaroid">
+                <img src="static/foto4.jpg" alt="Foto4">
+                <div class="caption">caption 4 💕</div>
+            </div>
+            <div class="polaroid">
+                <img src="static/foto5.JPG" alt="Foto 5">
+                <div class="caption">caption 5 🦋</div>
+            </div>
+            <div class="polaroid">
+                <img src="static/foto6.jpg" alt="Foto6">
+                <div class="caption">caption 6 🌷</div>
+            </div>
+        </div>
+
+        <p class="pesan">
+            Semoga hari ini penuh kebahagiaan,<br>
+            kesehatan, dan semua hal indah.<br>
+            Selamat ulang tahun! 🎉✨
+        </p>
+    </div>
+    <button class="btn-close" onclick="closeCollage()">✕ Close</button>
+</div>
+
+<script>
+// ===== PINTU BUNGA =====
+const flowerEmojis = ['🌸','🌺','🌼','🌻','🌹','🌷','💐','🪷','🌝','✨','💮','🏵️'];
+const colors = ['#ff6b9d','#ff9a9e','#fecfef','#ffd700','#ff85a1','#ffb347','#87ceeb','#98fb98','#dda0dd','#f0e68c'];
+
+function drawFlowerDoor(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, '#3d0f1a');
+    grad.addColorStop(0.5, '#5a1525');
+    grad.addColorStop(1, '#2d0a0a');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Gambar bunga pakai emoji grid
+    const cols = 5;
+    const rows = 10;
+    const cellW = W / cols;
+    const cellH = H / rows;
+
+    ctx.font = `${Math.min(cellW, cellH) * 0.8}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const x = c * cellW + cellW / 2;
+            const y = r * cellH + cellH / 2;
+            const emoji = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+            // Sedikit offset acak biar natural
+            const ox = (Math.random() - 0.5) * cellW * 0.4;
+            const oy = (Math.random() - 0.5) * cellH * 0.4;
+            ctx.fillText(emoji, x + ox, y + oy);
+        }
+    }
+
+    // Garis tengah pintu (tepi)
+    ctx.strokeStyle = 'rgba(255,215,100,0.4)';
+    ctx.lineWidth = 3;
+    if (canvasId === 'canvas-left') {
+        ctx.beginPath();
+        ctx.moveTo(W, 0);
+        ctx.lineTo(W, H);
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, H);
+        ctx.stroke();
+    }
+}
+
+// Render kedua pintu
+window.addEventListener('load', () => {
+    drawFlowerDoor('canvas-left');
+    drawFlowerDoor('canvas-right');
+
+    // Otomatis buka setelah 2.5 detik
+    setTimeout(() => {
+        document.querySelector('.door-left').classList.add('open');
+        document.querySelector('.door-right').classList.add('open');
+        document.getElementById('intro-text').style.opacity = '0';
+        document.getElementById('intro-text').style.transition = 'opacity 0.5s';
+
+        setTimeout(() => {
+            document.getElementById('flower-intro').style.display = 'none';
+            document.getElementById('intro-text').style.display = 'none';
+            document.getElementById('envelope-page').classList.add('show');
+        }, 1900);
+    }, 2500);
+});
+
+// ===== AMPLOP =====
+function openEnvelope() {
+    const wrap = document.querySelector('.envelope-wrap');
+    wrap.classList.add('opening');
+    setTimeout(() => {
+        document.getElementById('envelope-page').style.display = 'none';
+        document.getElementById('collage-page').classList.add('show');
+        startHearts();
+    }, 900);
+}
+
+// ===== CLOSE =====
+function closeCollage() {
+    document.getElementById('collage-page').classList.remove('show');
+    const envPage = document.getElementById('envelope-page');
+    envPage.style.display = 'flex';
+    const wrap = document.querySelector('.envelope-wrap');
+    wrap.classList.remove('opening');
+    heartsActive = false;
+    const c = document.getElementById('hearts');
+    c.getContext('2d').clearRect(0, 0, c.width, c.height);
+}
+
+// ===== LOVE BERJATUHAN =====
+const heartsCanvas = document.getElementById("hearts");
+const ctx = heartsCanvas.getContext("2d");
+heartsCanvas.width = window.innerWidth;
+heartsCanvas.height = window.innerHeight;
+
+const hearts = Array.from({ length: 80 }, () => ({
+    x: Math.random() * heartsCanvas.width,
+    y: Math.random() * heartsCanvas.height - heartsCanvas.height,
+    size: Math.random() * 20 + 10,
+    color: `hsl(${Math.random() * 30 + 340}, 90%, ${Math.random() * 20 + 60}%)`,
+    speed: Math.random() * 2 + 1,
+    swing: Math.random() * 2 - 1,
+    opacity: Math.random() * 0.5 + 0.5
+}));
+
+let heartsActive = false;
+
+function drawHeart(x, y, size, color, opacity) {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x, y - size/4, x - size/2, y - size/2, x - size/2, y - size*0.75);
+    ctx.bezierCurveTo(x - size/2, y - size*1.2, x, y - size, x, y - size*0.8);
+    ctx.bezierCurveTo(x, y - size, x + size/2, y - size*1.2, x + size/2, y - size*0.75);
+    ctx.bezierCurveTo(x + size/2, y - size/2, x, y - size/4, x, y);
+    ctx.fill();
+    ctx.restore();
+}
+
+function startHearts() {
+    heartsActive = true;
+    animateHearts();
+    setTimeout(() => heartsActive = false, 6000);
+}
+
+function animateHearts() {
+    if (!heartsActive) { ctx.clearRect(0, 0, heartsCanvas.width, heartsCanvas.height); return; }
+    ctx.clearRect(0, 0, heartsCanvas.width, heartsCanvas.height);
+    hearts.forEach(h => {
+        drawHeart(h.x, h.y, h.size, h.color, h.opacity);
+        h.y += h.speed;
+        h.x += Math.sin(h.y / 30) * h.swing;
+        if (h.y > heartsCanvas.height + 30) {
+            h.y = -30;
+            h.x = Math.random() * heartsCanvas.width;
+        }
+    });
+    requestAnimationFrame(animateHearts);
+}
+</script>
+
+</body>
+</html>
